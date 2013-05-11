@@ -14,7 +14,8 @@
  */
 
 /*
- *    SuperGreedy.java
+
+ *    RestrictedForwardSelection.java
  *    Copyright (C) 2004 University of Waikato, Hamilton, New Zealand
  *
  */
@@ -32,8 +33,48 @@ import java.util.Enumeration;
 import java.util.Vector;
 import java.util.Arrays;
 
-// TODO Add information here. See SuperGreedy for inspiration.
 /** 
+ <!-- globalinfo-start -->
+ * RestrictedForwardSelection :<br/>
+ * <br/>
+ * Performs a greedy forward selection search through the attributes. This
+forward selection must start from an empty initial attribute set. The algorithm
+first performs an evaluation of each individual attribute. The attributes are
+then sorted according to their merit (basically their predictive ability for the
+specified evaluator). The top attribute is then selected. This process is then
+repeated, but this time only using the previous best M/2 attributes from the
+sorted list. A winner is selected and added to the best group. The process is
+then repeated, but only using the best M/3 attributes from the second sorted
+list. Then a third winner is selected. All of this continues until m winners
+have been selected and these form the filtered subset of attributes.
+ * <br/>
+ * For more information see:<br/>
+ * <br/>
+ * Deng, Kan, and Andrew W. Moore. On Greediness of Feature Selection
+Algorithms. Carnegie Mellon University, The Robotics Institute, 1998.
+ * <p/>
+ <!-- globalinfo-end -->
+ *
+ <!-- technical-bibtex-start -->
+ * BibTeX:
+ * <pre>
+ * &#64;book{deng1998greediness,
+ * 		title={On Greediness of Feature Selection Algorithms},
+ * 		author={Deng, Kan and Moore, Andrew W},
+ * 		year={1998},
+ * 		publisher={Citeseer}
+ * }
+ * </pre>
+ * <p/>
+ <!-- technical-bibtex-end -->
+ *
+ <!-- options-start -->
+ * Valid options are: <p/>
+ * 
+ * <pre> -N &lt;num to select&gt;
+ *  Specify number of attributes to select</pre>
+ * 
+ <!-- options-end -->
  *
  * @author Brett Lagerwall
  */
@@ -114,22 +155,24 @@ public class RestrictedForwardSelection  extends ASSearch
 		resetOptions();
 	}
 
-// TODO Add global information for this search. This is seen in the GUI.
 	/**
 	 * Returns a string describing this search method.
 	 * @return A description of the search suitable for
 	 * displaying in the explorer/experimenter gui.
 	 */
 	public String globalInfo() {
-		/*return "SuperGreedy :\n\nPerforms a greedy forward selection search "
-			+ "through the attributes. This forward selection must start from "
-			+ "an empty initial attribute set. The algorithm first performs an "
-			+ "evaluation of each individual attribute. The attributes are "
-			+ "then sorted according to their merit (basically their "
-			+ "predictive ability for the specified evaluator). The top N "
-			+ "attributes are then returned as the attribute set -- where N is "
-			+ "the user-specified number to select.\n";*/
-		return "";
+		return "RestrictedForwardSelection:\n\nPerforms a greedy forward " 				+ "selection search through the attributes. This forward selection "
+			+ "must start from an empty initial attribute set. The algorithm "
+			+ "first performs an evaluation of each individual attribute. The "
+			+ "attributes are then sorted according to their merit (basically "
+			+ "their predictive ability for the specified evaluator). The top "
+			+ "attribute is then selected. This process is then repeated, but "
+			+ "this time only using the previous best M/2 attributes from the "
+			+ "sorted list. A winner is selected and added to the best group. "
+			+ "The process is then repeated, but only using the best M/3 "
+			+ "attributes from the second sorted list. Then a third winner is "
+			+ "selected. All of this continues until m winners have been "
+			+ "selected and these form the filtered subset of attributes.\n";
   }
 
 
@@ -209,32 +252,16 @@ public class RestrictedForwardSelection  extends ASSearch
 	}
 
 
-// TODO Write a toString() method  for RestrictedForwardSelection.
 	/**
 	 * Returns a description of the search.
 	 * @return A description of the search as a String.
 	 */
 	public String toString() {
-		/*StringBuffer strBuf = new StringBuffer();
-		strBuf.append("Super greedy search heuristic.\n\n");
+		StringBuffer strBuf = new StringBuffer();
+		strBuf.append("Restricted forward selection search heuristic.\n\n");
 		strBuf.append("Number of attributes to select (-N): " + numToSelect +
 			"\n");
-
-		if (rankedAtts != null) {
-			strBuf.append("Ranked Attributes\n");
-			strBuf.append("-----------------\n");
-			strBuf.append("Index\tMerit\n");
-
-			for (int i = 0; i < numAttribs; i++) {
-				if (rankedAtts[i] != null &&
-						rankedAtts[i].getIndex() != classIndex) {
-					strBuf.append(rankedAtts[i].getIndex() + "\t" +
-						rankedAtts[i].getMerit() + "\n");
-				}
-			}
-		}
-		return strBuf.toString();*/
-		return "";
+		return strBuf.toString();
 	}
 
 
@@ -303,21 +330,16 @@ public class RestrictedForwardSelection  extends ASSearch
 		}
 		Arrays.sort(oldRanking);
 		bestGroup.set(oldRanking[0].getIndex());
-System.out.println("\n\nLoop: 0");
-System.out.println("Added attribute " + (oldRanking[0].getIndex() + 1) + " to the best set.");
 
 		for (int i = 1; i < numToSelect; i++) {
-System.out.println("\nLoop: " + i);
 
 			RankedAttribute[] newRanking =
 				new RankedAttribute[(int)Math.round
 				((double)(numAttribs - 1) / (i + 1))];
-System.out.println("Looking for " + newRanking.length + " attributes.");
 
 			position = 0;
 			for (int j = 0; j < oldRanking.length; j++) {
 				if (position >= newRanking.length) {
-System.out.println("Found sufficient attributes.");
 					// Filled up the new array, so break.
 					break;
 				}
@@ -340,24 +362,18 @@ System.out.println("Found sufficient attributes.");
 
 				// If one or more attributes were evaluated in the last round,
 				// then the winner can be added to the best group.
-System.out.println("Not enough attributes to fill up the array. Needed " + newRanking.length + ", but got " + position);
 				if (position != 0) {
 					Arrays.sort(newRanking, 0, position - 1);
 					bestGroup.set(newRanking[0].getIndex());
-System.out.println("Can still add one more attribute to the best set.");
-System.out.println("Added attribute " + (newRanking[0].getIndex() + 1) + " to the best set.");
-System.out.println("Exiting early.");
 					break;
 				}
 			} else {
 				Arrays.sort(newRanking);
 				bestGroup.set(newRanking[0].getIndex());
-System.out.println("Added attribute " + (newRanking[0].getIndex() + 1) + " to the best set.");
 				oldRanking = newRanking;
 			}
 		}
 
-System.out.println("\n");
 		return attributeList(bestGroup);
 	}
 
