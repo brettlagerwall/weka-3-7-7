@@ -319,7 +319,6 @@ public class SuperGreedy  extends ASSearch implements OptionHandler {
 	public int[] search (ASEvaluation ASEval, Instances data) throws Exception {
 
 		initialise(ASEval, data);
-System.out.println(this);
 
 		SubsetEvaluator asEvaluator = (SubsetEvaluator)asEval;
 		BitSet candidateGroup = new BitSet(numAttribs);
@@ -344,7 +343,6 @@ System.out.println(this);
 		for (int i = 0; i < numToSelect; i++) {
 			bestGroup.set(rankedAtts[i].getIndex());
 		}
-System.out.println(this);
 
 		return attributeList(bestGroup);
 	}
