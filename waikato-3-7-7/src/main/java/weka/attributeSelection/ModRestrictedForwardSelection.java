@@ -33,7 +33,6 @@ import java.util.Enumeration;
 import java.util.Vector;
 import java.util.Arrays;
 
-// TODO Need to rewrite this info.
 /** 
  <!-- globalinfo-start -->
  * ModRestrictedForwardSelection :<br/>
@@ -43,11 +42,12 @@ forward selection must start from an empty initial attribute set. The algorithm
 first performs an evaluation of each individual attribute. The attributes are
 then sorted according to their merit (basically their predictive ability for the
 specified evaluator). The top attribute is then selected. This process is then
-repeated, but this time only using the previous best M/2 attributes from the
-sorted list. A winner is selected and added to the best group. The process is
-then repeated, but only using the best M/3 attributes from the second sorted
-list. Then a third winner is selected. All of this continues until m winners
-have been selected and these form the filtered subset of attributes.
+repeated, but this time only using the previous best M/d attributes (where M is
+the total number of attributes, N is the number of attributes to be selected and
+d is a divFactor which can be calculated by taking the Nth root of M). Again,
+the top attribute is selected as the winner. The process is repeated using the
+previous best M_2/d attributes (where M_2 is the set of attributes obtained in
+the second iteration). All of this continues until N attributes are selected.
  * <br/>
  * For more information see:<br/>
  * <br/>
@@ -156,25 +156,27 @@ public class ModRestrictedForwardSelection extends ASSearch
 		resetOptions();
 	}
 
-// TODO Need to rewrite the global info.
 	/**
 	 * Returns a string describing this search method.
 	 * @return A description of the search suitable for
 	 * displaying in the explorer/experimenter gui.
 	 */
 	public String globalInfo() {
-		return "ModRestrictedForwardSelection:\n\nPerforms a greedy forward " 				+ "selection search through the attributes. This forward selection "
+		return "ModRestrictedForwardSelection:\n\nPerforms a greedy forward "
+			+ "selection search through the attributes. This forward selection "
 			+ "must start from an empty initial attribute set. The algorithm "
 			+ "first performs an evaluation of each individual attribute. The "
 			+ "attributes are then sorted according to their merit (basically "
 			+ "their predictive ability for the specified evaluator). The top "
 			+ "attribute is then selected. This process is then repeated, but "
-			+ "this time only using the previous best M/2 attributes from the "
-			+ "sorted list. A winner is selected and added to the best group. "
-			+ "The process is then repeated, but only using the best M/3 "
-			+ "attributes from the second sorted list. Then a third winner is "
-			+ "selected. All of this continues until m winners have been "
-			+ "selected and these form the filtered subset of attributes.\n";
+			+ "this time only using the previous best M/d attributes (where M "
+			+ "is the total number of attributes, N is the number of "
+			+ "attributes to be selected and d is a divFactor which can be "
+			+ "calculated by taking the Nth root of M). Again, the top "
+			+ "attribute is selected as the winner. The process is repeated "
+			+ "using the previous best M_2/d attributes (where M_2 is the set "
+			+ "of attributes obtained in the second iteration). All of this "
+			+ "continues until N attributes are selected.";
   }
 
 
@@ -254,14 +256,13 @@ public class ModRestrictedForwardSelection extends ASSearch
 	}
 
 
-//TODO Need to make a new toString() method.
 	/**
 	 * Returns a description of the search.
 	 * @return A description of the search as a String.
 	 */
 	public String toString() {
 		StringBuffer strBuf = new StringBuffer();
-		strBuf.append("Restricted forward selection search heuristic.\n\n");
+		strBuf.append("Mod Restricted forward selection search heuristic.\n\n");
 		strBuf.append("Number of attributes to select (-N): " + numToSelect +
 			"\n");
 		return strBuf.toString();
@@ -311,13 +312,13 @@ public class ModRestrictedForwardSelection extends ASSearch
 
 		for (int i = 1; i < 1 + slotsRemaining; i++) {
 			bestGroup.set(oldRanking[i].getIndex());
-System.out.println("Selected attribute " + (oldRanking[i].getIndex() + 1));
 		}
 	}
 
 
 	/**
-	 * Searches the attribute subset space using restricted forward selection.
+	 * Searches the attribute subset space using mod restricted forward
+	 * selection.
 	 *
 	 * @param ASEval The attribute evaluator to guide the search.
 	 * @param data The training instances.
@@ -329,10 +330,7 @@ System.out.println("Selected attribute " + (oldRanking[i].getIndex() + 1));
 		initialise(ASEval, data);
 
 		double divFactor = Math.pow(numAttribs - 1, 1.0 / numToSelect);
-System.out.println("\ndivFactor: " + divFactor);
-System.out.println("\nLoop 1:");
 		double listSize = numAttribs - 1;
-System.out.println("listSize " + listSize);
 		SubsetEvaluator asEvaluator = (SubsetEvaluator)asEval;
 		BitSet bestGroup = new BitSet(numAttribs);
 
@@ -349,32 +347,23 @@ System.out.println("listSize " + listSize);
 		}
 		Arrays.sort(oldRanking);
 		bestGroup.set(oldRanking[0].getIndex());
-System.out.println("Selected attribute " + (oldRanking[0].getIndex() + 1));
 
 		for (int i = 1; i < numToSelect; i++) {
 
-System.out.println("\nLoop " + (i + 1));
 			listSize /= divFactor;
-System.out.println("listSize " + listSize);
 			int actualListSize = (int)Math.ceil(listSize);
-System.out.println("actualListSize " + actualListSize);
-System.out.println("Slot to fill " + (numToSelect - i));
 			if (actualListSize <= numToSelect - i) {
-System.out.println("List size too small. Filling all remaining slots.");
 				fillRemainingSlots(bestGroup, oldRanking, numToSelect - i);
-System.out.println("Exiting outer loop.");
 				break;
 			}
 			RankedAttribute[] newRanking = new RankedAttribute[actualListSize];
 
 			position = 0;
 			// Attribute at index 0 will have been used in previous iteration.
-System.out.println("Creating new array.");
 			for (int j = 1; j < oldRanking.length; j++) {
 				
 				if (position >= newRanking.length) {
 					// Filled up the new array, so break.
-System.out.println("New array is full.");
 					break;
 				} else {
 					bestGroup.set(oldRanking[j].getIndex());
@@ -389,11 +378,9 @@ System.out.println("New array is full.");
 
 			Arrays.sort(newRanking);
 			bestGroup.set(newRanking[0].getIndex());
-System.out.println("Selected attribute " + (newRanking[0].getIndex() + 1));
 			oldRanking = newRanking;
 		}
 
-System.out.println("Finished\n");
 		return attributeList(bestGroup);
 	}
 
