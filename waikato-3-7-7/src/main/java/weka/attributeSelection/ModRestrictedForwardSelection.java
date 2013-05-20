@@ -352,7 +352,8 @@ public class ModRestrictedForwardSelection extends ASSearch
 
 			listSize /= divFactor;
 			int actualListSize = (int)Math.ceil(listSize);
-			if (actualListSize <= numToSelect - i) {
+			if (actualListSize <= numToSelect - i ||
+				actualListSize > oldRanking.length - 1) {
 				fillRemainingSlots(bestGroup, oldRanking, numToSelect - i);
 				break;
 			}
